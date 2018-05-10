@@ -70,7 +70,7 @@ def notify_send_email(dates, current_apt, settings, use_gmail=False):
         msg = MIMEMultipart()
         msg['Subject'] = subject
         msg['From'] = sender
-        msg['To'] = ','.join(recipient)
+        msg['To'] = recipient
         msg['mime-version'] = "1.0"
         msg['content-type'] = "text/html"
         msg.attach(MIMEText(message, 'html'))
