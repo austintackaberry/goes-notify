@@ -21,6 +21,11 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 
+email_from=os.environ["YAHOO_EMAIL"]
+email_to=os.environ["GMAIL_EMAIL"]
+email_username=os.environ["YAHOO_USERNAME"]
+email_password=os.environ["YAHOO_PASSWORD"]
+
 EMAIL_TEMPLATE = """
 <p>Good news! New Global Entry appointment(s) available on the following dates:</p>
 %s
@@ -30,8 +35,8 @@ EMAIL_TEMPLATE = """
 GOES_URL_FORMAT = 'https://ttp.cbp.dhs.gov/schedulerapi/slots?orderBy=soonest&limit=3&locationId={0}&minimum=1'
 
 def notify_send_email(dates, current_apt, settings, use_gmail=False):
-    sender = settings.get('email_from')
-    recipient = settings.get('email_to', sender)  # If recipient isn't provided, send to self.
+    sender = email_from
+    recipient = email_to  # If recipient isn't provided, send to self.
 
     try:
         if use_gmail:
@@ -43,14 +48,14 @@ def notify_send_email(dates, current_apt, settings, use_gmail=False):
             server.starttls()
             server.login(sender, password)
         else:
-            username = settings.get('email_username').encode('utf-8')
-            password = settings.get('email_password').encode('utf-8')
+            username = email_username
+            password = email_password
             server = smtplib.SMTP(settings.get('email_server'), settings.get('email_port'))
             server.ehlo()
             server.starttls()
             server.ehlo()
             if username:
-                    server.login(username, password)
+                server.login(username, password)
 
         subject = "Alert: Global Entry interview openings are available"
 
@@ -72,9 +77,10 @@ def notify_send_email(dates, current_apt, settings, use_gmail=False):
 
         server.sendmail(sender, recipient, msg.as_string())
         server.quit()
+        logging.debug('Email sent?')
     except Exception:
         logging.exception('Failed to send succcess e-mail.')
-        log(e)
+        # log(e)
 
 def notify_osx(msg):
     commands.getstatusoutput("osascript -e 'display notification \"%s\" with title \"Global Entry Notifier\"'" % msg)
@@ -124,6 +130,7 @@ def main(settings):
                     dates.append(dtp.strftime('%A, %B %d @ %I:%M%p'))
 
         if not dates:
+            notify_send_email(dates, current_apt, settings, use_gmail=settings.get('use_gmail'))
             return
 
         hash = hashlib.md5(''.join(dates) + current_apt.strftime('%B %d, %Y @ %I:%M%p')).hexdigest()
@@ -142,7 +149,6 @@ def main(settings):
 
     msg = 'Found new appointment(s) in location %s on %s (current is on %s)!' % (settings.get("enrollment_location_id"), dates[0], current_apt.strftime('%B %d, %Y @ %I:%M%p'))
     logging.info(msg + (' Sending email.' if not settings.get('no_email') else ' Not sending email.'))
-
     if settings.get('notify_osx'):
         notify_osx(msg)
     if not settings.get('no_email'):
@@ -160,8 +166,8 @@ def _check_settings(config):
         if not config.get(setting):
             raise ValueError('Missing setting %s in config.json file.' % setting)
 
-    if config.get('no_email') == False and not config.get('email_from'): # email_to is not required; will default to email_from if not set
-        raise ValueError('email_to and email_from required for sending email. (Run with --no-email or no_email=True to disable email.)')
+    # if config.get('no_email') == False and not config.get('email_from'): # email_to is not required; will default to email_from if not set
+    #     raise ValueError('email_to and email_from required for sending email. (Run with --no-email or no_email=True to disable email.)')
 
     if config.get('use_gmail') and not config.get('gmail_password'):
         raise ValueError('gmail_password not found in config but is required when running with use_gmail option')
