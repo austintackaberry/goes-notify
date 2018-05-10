@@ -77,7 +77,7 @@ def notify_send_email(dates, current_apt, settings, use_gmail=False):
 
         server.sendmail(sender, recipient, msg.as_string())
         server.quit()
-        logging.debug('Email sent?')
+        logging.debug('Email sent')
     except Exception:
         logging.exception('Failed to send succcess e-mail.')
         # log(e)
@@ -130,7 +130,6 @@ def main(settings):
                     dates.append(dtp.strftime('%A, %B %d @ %I:%M%p'))
 
         if not dates:
-            notify_send_email(dates, current_apt, settings, use_gmail=settings.get('use_gmail'))
             return
 
         hash = hashlib.md5(''.join(dates) + current_apt.strftime('%B %d, %Y @ %I:%M%p')).hexdigest()
