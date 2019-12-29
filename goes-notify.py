@@ -130,6 +130,7 @@ def main(settings):
                     dates.append(dtp.strftime('%A, %B %d @ %I:%M%p'))
 
         if not dates:
+            logging.info("Could not find appointment earlier than current appointment date: %s", settings['current_interview_date_str'])
             return
 
         hash = hashlib.md5(''.join(dates) + current_apt.strftime('%B %d, %Y @ %I:%M%p')).hexdigest()
@@ -208,7 +209,7 @@ if __name__ == '__main__':
 
     # Configure File Logging
     if settings.get('logfile'):
-        handler = logging.FileHandler('%s/%s' % (pwd, settings.get('logfile')))
+        handler = logging.FileHandler(settings.get('logfile'))
         handler.setFormatter(logging.Formatter('%(levelname)s: %(asctime)s %(message)s'))
         handler.setLevel(logging.DEBUG)
         logging.getLogger('').addHandler(handler)
