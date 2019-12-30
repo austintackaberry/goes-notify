@@ -136,6 +136,7 @@ def main(settings):
         hash = hashlib.md5(''.join(dates) + current_apt.strftime('%B %d, %Y @ %I:%M%p')).hexdigest()
         fn = "goes-notify_{0}.txt".format(hash)
         if settings.get('no_spamming') and os.path.exists(fn):
+            logging.info("Found available appointment dates, but not sending email because email already sent for these dates.")
             return
         else:
             for f in glob.glob("goes-notify_*.txt"):
